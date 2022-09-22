@@ -8,11 +8,53 @@ import java.time.Instant;
 import java.time.temporal.Temporal;
 import java.util.Optional;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 import static java.util.Objects.requireNonNull;
 
 public final class Timing {
+
+    public void time(final Timeable method) {
+        requireNonNull(method);
+        start();
+        method.run();
+        stop();
+    }
+
+    public <T> T time(final TimeableResult<T> method) {
+        requireNonNull(method);
+        start();
+        final var value = method.run();
+        stop();
+        return value;
+    }
+
+    public void timeThrows(final TimeableMayThrow method) throws Exception {
+        requireNonNull(method);
+        start();
+        try {
+            method.run();
+        } catch (final Exception exception) {
+            stop();
+            throw exception;
+        }
+        stop();
+    }
+
+    public <T> T timeThrows(final TimeableResultMayThrow<T> method)
+    throws Exception {
+        requireNonNull(method);
+        start();
+        final T value;
+        try {
+            value = method.run();
+        } catch (final Exception exception) {
+            stop();
+            throw exception;
+        }
+
+        stop();
+        return value;
+    }
 
     private final PrintWriter writer;
     private final Function<Duration, String> formatter;
@@ -51,19 +93,24 @@ public final class Timing {
         return Optional.ofNullable(lastTiming);
     }
 
-    public <T> T time(final Supplier<T> method) {
-        requireNonNull(method);
-        start();
-        final var value = method.get();
-        stop();
-        return value;
+    @FunctionalInterface
+    public interface Timeable {
+        void run();
     }
 
-    public void time(final Runnable method) {
-        requireNonNull(method);
-        start();
-        method.run();
-        stop();
+    @FunctionalInterface
+    public interface TimeableMayThrow {
+        void run() throws Exception;
+    }
+
+    @FunctionalInterface
+    public interface TimeableResult<T> {
+        T run();
+    }
+
+    @FunctionalInterface
+    public interface TimeableResultMayThrow<T> {
+        T run() throws Exception;
     }
 
     private void start() {
