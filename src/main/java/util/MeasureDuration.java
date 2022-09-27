@@ -11,7 +11,10 @@ import java.util.function.Function;
 
 import static java.util.Objects.requireNonNull;
 
-public final class Timing {
+/**
+ * This class can be used to measure the time certain operations take.
+ */
+public final class MeasureDuration {
 
     public void time(final Timeable method) {
         requireNonNull(method);
@@ -64,28 +67,28 @@ public final class Timing {
     private Temporal startTime = null;
     private Duration lastTiming = null;
 
-    public Timing() {
+    public MeasureDuration() {
         this.writer = new PrintWriter(OutputStream.nullOutputStream());
         this.formatter = duration -> "";
     }
 
-    public Timing(final Writer writer) {
+    public MeasureDuration(final Writer writer) {
         this.writer = new PrintWriter(requireNonNull(writer));
         this.formatter = Duration::toString;
     }
 
-    public Timing(final OutputStream outputStream) {
+    public MeasureDuration(final OutputStream outputStream) {
         this.writer = new PrintWriter(requireNonNull(outputStream));
         this.formatter = Duration::toString;
     }
 
-    public Timing(final Writer writer,
+    public MeasureDuration(final Writer writer,
             final Function<Duration, String> formatter) {
         this.writer = new PrintWriter(requireNonNull(writer));
         this.formatter = requireNonNull(formatter);
     }
 
-    public Timing(final OutputStream outputStream,
+    public MeasureDuration(final OutputStream outputStream,
             final Function<Duration, String> formatter) {
         this.writer = new PrintWriter(requireNonNull(outputStream));
         this.formatter = requireNonNull(formatter);
