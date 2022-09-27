@@ -16,46 +16,48 @@ public final class Timing {
     public void time(final Timeable method) {
         requireNonNull(method);
         start();
-        method.run();
-        stop();
+
+        try {
+            method.run();
+        } finally {
+            stop();
+        }
     }
 
     public <T> T time(final TimeableResult<T> method) {
         requireNonNull(method);
         start();
-        final var value = method.run();
-        stop();
-        return value;
+
+        try {
+            return method.run();
+        } finally {
+            stop();
+        }
     }
 
-    public void timeThrows(final TimeableMayThrow method) throws Exception {
+    public <E extends Throwable> void timeThrows(
+            final TimeableMayThrow<E> method) throws E {
         requireNonNull(method);
         start();
+
         try {
             method.run();
-        } catch (final Exception exception) {
+        } finally {
             stop();
-            throw exception;
         }
-        stop();
     }
 
-    public <T> T timeThrows(final TimeableResultMayThrow<T> method)
-    throws Exception {
+    public <T, E extends Throwable> T timeThrows(
+            final TimeableResultMayThrow<T, E> method) throws E {
         requireNonNull(method);
         start();
-        final T value;
+
         try {
-            value = method.run();
-        } catch (final Exception exception) {
+            return method.run();
+        } finally {
             stop();
-            throw exception;
         }
-
-        stop();
-        return value;
     }
-
     private final PrintWriter writer;
     private final Function<Duration, String> formatter;
 
@@ -98,9 +100,12 @@ public final class Timing {
         void run();
     }
 
-    @FunctionalInterface
-    public interface TimeableMayThrow {
-        void run() throws Exception;
+    private void stop() {
+        final var endTime = Instant.now();
+        final var startTime = this.startTime;
+        this.startTime = null;
+        lastTiming = Duration.between(startTime, endTime);
+        writer.println(formatter.apply(lastTiming));
     }
 
     @FunctionalInterface
@@ -109,18 +114,16 @@ public final class Timing {
     }
 
     @FunctionalInterface
-    public interface TimeableResultMayThrow<T> {
-        T run() throws Exception;
+    public interface TimeableMayThrow<E extends Throwable> {
+        void run() throws E;
     }
 
     private void start() {
         startTime = Instant.now();
     }
 
-    private void stop() {
-        final var endTime = Instant.now();
-        lastTiming = Duration.between(startTime, endTime);
-        startTime = null;
-        writer.println(formatter.apply(lastTiming));
+    @FunctionalInterface
+    public interface TimeableResultMayThrow<T, E extends Throwable> {
+        T run() throws E;
     }
 }
