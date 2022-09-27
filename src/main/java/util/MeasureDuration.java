@@ -18,53 +18,41 @@ public final class MeasureDuration {
 
     public void time(final Timeable method) {
         requireNonNull(method);
-        start();
 
-        try {
+        try (final var ignored = new MeasureDurationInner()) {
             method.run();
-        } finally {
-            stop();
         }
     }
 
     public <T> T time(final TimeableResult<T> method) {
         requireNonNull(method);
-        start();
 
-        try {
+        try (final var ignored = new MeasureDurationInner()) {
             return method.run();
-        } finally {
-            stop();
         }
     }
 
     public <E extends Throwable> void timeThrows(
             final TimeableMayThrow<E> method) throws E {
         requireNonNull(method);
-        start();
 
-        try {
+        try (final var ignored = new MeasureDurationInner()) {
             method.run();
-        } finally {
-            stop();
         }
     }
 
     public <T, E extends Throwable> T timeThrows(
             final TimeableResultMayThrow<T, E> method) throws E {
         requireNonNull(method);
-        start();
 
-        try {
+        try (final var ignored = new MeasureDurationInner()) {
             return method.run();
-        } finally {
-            stop();
         }
     }
     private final PrintWriter writer;
+
     private final Function<Duration, String> formatter;
 
-    private Temporal startTime = null;
     private Duration lastTiming = null;
 
     public MeasureDuration() {
@@ -103,14 +91,6 @@ public final class MeasureDuration {
         void run();
     }
 
-    private void stop() {
-        final var endTime = Instant.now();
-        final var startTime = this.startTime;
-        this.startTime = null;
-        lastTiming = Duration.between(startTime, endTime);
-        writer.println(formatter.apply(lastTiming));
-    }
-
     @FunctionalInterface
     public interface TimeableResult<T> {
         T run();
@@ -121,12 +101,23 @@ public final class MeasureDuration {
         void run() throws E;
     }
 
-    private void start() {
-        startTime = Instant.now();
-    }
-
     @FunctionalInterface
     public interface TimeableResultMayThrow<T, E extends Throwable> {
         T run() throws E;
+    }
+
+    private final class MeasureDurationInner implements AutoCloseable {
+        private final Temporal startTime;
+
+        private MeasureDurationInner() {
+            startTime = Instant.now();
+        }
+
+        @Override
+        public void close() {
+            final var endTime = Instant.now();
+            lastTiming = Duration.between(startTime, endTime);
+            writer.println(formatter.apply(lastTiming));
+        }
     }
 }
