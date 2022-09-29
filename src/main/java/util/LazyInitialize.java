@@ -12,11 +12,11 @@ import static java.util.Objects.requireNonNull;
  * @param <T> The type of the variable to be initialized.
  */
 public final class LazyInitialize<T> {
-    private final Supplier<T> constructor;
+    private final Supplier<? extends T> constructor;
     // See: https://www.cs.umd.edu/~pugh/java/memoryModel/DoubleCheckedLocking.html
     private volatile T instance = null;
 
-    public LazyInitialize(final Supplier<T> constructor) {
+    public LazyInitialize(final Supplier<? extends T> constructor) {
         this.constructor = requireNonNull(constructor);
     }
 
