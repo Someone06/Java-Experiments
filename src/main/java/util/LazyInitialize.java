@@ -25,6 +25,10 @@ public final class LazyInitialize<T> {
             synchronized (LazyInitialize.class) {
                 if (instance == null) {
                     instance = constructor.get();
+                    if (instance == null) {
+                        throw new NullPointerException(
+                                "Constructor returned null.");
+                    }
                 }
             }
         }
