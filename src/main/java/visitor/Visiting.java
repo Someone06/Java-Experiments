@@ -55,7 +55,7 @@ public final class Visiting {
         }
 
         private Optional<Method> findInInterface(final Class<?> clazz) {
-            // Note: Oder of iteration matters.
+            // Note: Order of iteration matters.
             final Class<?>[] interfaces = clazz.getInterfaces();
             for (final Class<?> anInterface : interfaces) {
                 try {
