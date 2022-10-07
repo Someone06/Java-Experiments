@@ -6,6 +6,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 /**
  * Visitor pattern in Java using reflection.
@@ -51,17 +52,22 @@ public final class Visiting {
             }
         }
 
-        private Optional<Method> findInClass(Class<?> argument) {
-            while (argument != Object.class) {
-                final var method = getVisitMethod(argument);
-                if (method.isPresent()) {
-                    return method;
-                } else {
-                    argument = argument.getSuperclass();
-                }
-            }
+        /**
+         * Includes the passed class itself (if it is not
+         * {@link java.lang.Object}), but excludes class
+         * {@link java.lang.Object}.
+         */
+        private Stream<Class<?>> getClassAndSuperclasses(final Class<?> clazz) {
+            return Stream.iterate(
+                    clazz, c -> c != Object.class, Class::getSuperclass);
+        }
 
-            return Optional.empty();
+
+        private Optional<Method> findInClass(Class<?> argument) {
+            return getClassAndSuperclasses(argument).map(this::getVisitMethod)
+                    .filter(Optional::isPresent)
+                    .map(Optional::get)
+                    .findFirst();
         }
 
         private Optional<Method> findInInterface(final Class<?> argument) {
