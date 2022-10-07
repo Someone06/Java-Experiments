@@ -4,6 +4,7 @@ import util.OptionalUtil;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.Optional;
 
 /**
@@ -20,52 +21,56 @@ public final class Visiting {
     }
 
     public interface Visitor {
-        default void dispatch(final Object object) {
-            final Method method = getMethod(object.getClass());
+        String visitMethodName = "visit";
 
+        default void dispatch(final Object argument) {
+            final var visit = findVisitMethod(argument.getClass());
+            callVisitMethod(visit, argument);
+
+            if (argument instanceof Visitable visitable) {
+                visitable.accept(this);
+            }
+        }
+
+        private void callVisitMethod(final Method visit,
+                final Object argument) {
             try {
-                method.invoke(this, object);
+                visit.invoke(this, argument);
             } catch (final IllegalAccessException |
                            InvocationTargetException e) {
                 throw new RuntimeException(e);
             }
+        }
 
-            if (object instanceof Visitable) {
-                callAccept((Visitable) object);
+        private Optional<Method> getVisitMethod(final Class<?> argument) {
+            try {
+                return Optional.of(
+                        getClass().getMethod(visitMethodName, argument));
+            } catch (final NoSuchMethodException ignored) {
+                return Optional.empty();
             }
-
-
         }
 
-        private void callAccept(final Visitable visitable) {
-            visitable.accept(this);
-        }
-
-        private Optional<Method> findInClass(Class<?> clazz) {
-            Method m = null;
-            while (m == null && clazz != Object.class) {
-                try {
-                    m = getClass().getMethod("visit", clazz);
-                } catch (final NoSuchMethodException ignored) {
-                    clazz = clazz.getSuperclass();
-                }
-            }
-
-            return Optional.ofNullable(m);
-        }
-
-        private Optional<Method> findInInterface(final Class<?> clazz) {
-            // Note: Order of iteration matters.
-            final Class<?>[] interfaces = clazz.getInterfaces();
-            for (final Class<?> anInterface : interfaces) {
-                try {
-                    return Optional.of(
-                            getClass().getMethod("visit", anInterface));
-                } catch (final NoSuchMethodException ignored) {
+        private Optional<Method> findInClass(Class<?> argument) {
+            while (argument != Object.class) {
+                final var method = getVisitMethod(argument);
+                if (method.isPresent()) {
+                    return method;
+                } else {
+                    argument = argument.getSuperclass();
                 }
             }
 
             return Optional.empty();
+        }
+
+        private Optional<Method> findInInterface(final Class<?> argument) {
+            // Note: Order matters.
+            return Arrays.stream(argument.getInterfaces())
+                    .map(this::getVisitMethod)
+                    .filter(Optional::isPresent)
+                    .map(Optional::get)
+                    .findFirst();
         }
 
         private Method findFallbackMethod() {
@@ -76,10 +81,10 @@ public final class Visiting {
             }
         }
 
-        private Method getMethod(final Class<?> clazz) {
+        private Method findVisitMethod(final Class<?> argument) {
             return OptionalUtil.or(this::findFallbackMethod,
-                                   () -> findInClass(clazz),
-                                   () -> findInInterface(clazz)
+                                   () -> findInClass(argument),
+                                   () -> findInInterface(argument)
                                   );
         }
 
@@ -89,6 +94,4 @@ public final class Visiting {
     public interface Visitable {
         void accept(Visitor visitor);
     }
-
-
 }
