@@ -53,12 +53,10 @@ public final class Visiting {
         }
 
         private Optional<Method> findInClass(Class<?> argument) {
-            // Stating the type explicitly here is necessary, else compiler type
-            // checking fails (OpenJDK, Java 17). The compiler cannot infer,
-            // that 'Class<?>' is the same type as 'Class<? super ?>'.
-            final Stream<Class<?>> stream = Stream.iterate(argument, c -> c
-                    != Object.class, Class::getSuperclass);
-            return stream.map(this::getVisitMethod)
+            return Stream.<Class<?>>iterate(argument, c -> c != Object.class,
+                                            Class::getSuperclass
+                                           )
+                    .map(this::getVisitMethod)
                     .filter(Optional::isPresent)
                     .map(Optional::get)
                     .findFirst();
