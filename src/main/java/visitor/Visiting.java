@@ -52,19 +52,13 @@ public final class Visiting {
             }
         }
 
-        /**
-         * Includes the passed class itself (if it is not
-         * {@link java.lang.Object}), but excludes class
-         * {@link java.lang.Object}.
-         */
-        private Stream<Class<?>> getClassAndSuperclasses(final Class<?> clazz) {
-            return Stream.iterate(
-                    clazz, c -> c != Object.class, Class::getSuperclass);
-        }
-
-
         private Optional<Method> findInClass(Class<?> argument) {
-            return getClassAndSuperclasses(argument).map(this::getVisitMethod)
+            // Stating the type explicitly here is necessary, else compiler type
+            // checking fails (OpenJDK, Java 17). The compiler cannot infer,
+            // that 'Class<?>' is the same type as 'Class<? super ?>'.
+            final Stream<Class<?>> stream = Stream.iterate(argument, c -> c
+                    != Object.class, Class::getSuperclass);
+            return stream.map(this::getVisitMethod)
                     .filter(Optional::isPresent)
                     .map(Optional::get)
                     .findFirst();
