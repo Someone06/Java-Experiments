@@ -11,7 +11,7 @@ import static java.util.Objects.requireNonNull;
 
 public final class LoadClassInPackage {
 
-    private final Queue<FileAndPackageName> queue = Collections.asLifoQueue(
+    private final Queue<FileAndName> queue = Collections.asLifoQueue(
             new LinkedList<>());
 
     private static Class<?> loadClass(final String className) {
@@ -35,53 +35,47 @@ public final class LoadClassInPackage {
         }
 
         return Stream.generate(
-                        () -> resources.hasMoreElements()
-                              ? resources.nextElement()
-                              : null)
+                        () -> resources.hasMoreElements() ?
+                              resources.nextElement()
+                                                          : null)
                 .takeWhile(Objects::nonNull)
                 .map(URL::getFile)
                 .map(File::new)
-                .map(file -> new FileAndPackageName(file, packageName))
+                .map(file -> new FileAndName(file, packageName))
                 .flatMap(this::findClassesLazy);
     }
 
-    private Optional<FileAndPackageName> generateClass() {
-        FileAndPackageName fileAndPackageName = null;
-        while (!queue.isEmpty() && (fileAndPackageName = queue.remove()).file()
+    private Optional<FileAndName> generateClassFileAndName() {
+        FileAndName fileAndName = null;
+        while (!queue.isEmpty() && (fileAndName = queue.remove()).file()
                 .isDirectory()) {
-            final var files = fileAndPackageName.file().listFiles();
+            final var files = fileAndName.file().listFiles();
             assert files != null;
             for (final var file : files) {
-                queue.add(new FileAndPackageName(
-                        file,
-                        fileAndPackageName.packageName() + '.' + file.getName()
-                ));
+                queue.add(new FileAndName(file, fileAndName.name() + '.'
+                        + file.getName()));
             }
-            fileAndPackageName = null;
+            fileAndName = null;
         }
 
-        return Optional.ofNullable(fileAndPackageName);
+        return Optional.ofNullable(fileAndName);
     }
 
-    private Stream<Class<?>> findClassesLazy(final FileAndPackageName in) {
+    private Stream<Class<?>> findClassesLazy(final FileAndName in) {
         queue.add(in);
 
-        return Stream.generate(this::generateClass)
+        return Stream.generate(this::generateClassFileAndName)
                 .takeWhile(Optional::isPresent)
                 .map(Optional::get)
-                .filter(FileAndPackageName::refersToClass)
-                .map(FileAndPackageName::toClassName)
+                .filter(FileAndName::refersToClass)
+                .map(FileAndName::toClassName)
                 .map(LoadClassInPackage::loadClass);
     }
 
-    private record FileAndPackageName(File file, String packageName) {
-        public FileAndPackageName(final File file, final String packageName) {
+    private record FileAndName(File file, String name) {
+        public FileAndName(final File file, final String name) {
             this.file = requireNonNull(file);
-            this.packageName = requireNonNull(packageName);
-        }
-
-        public String toPackageName() {
-            return packageName() + '.' + file().getName();
+            this.name = requireNonNull(name);
         }
 
         public boolean refersToClass() {
@@ -90,7 +84,7 @@ public final class LoadClassInPackage {
 
         public String toClassName() {
             // Remove the '.class' file suffix.
-             return packageName().substring(0, packageName().length() - 6);
+            return name().substring(0, name().length() - 6);
         }
     }
 }
