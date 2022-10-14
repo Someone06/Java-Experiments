@@ -1,4 +1,4 @@
-package deserializer;
+package dynamicClassLoader;
 
 
 import java.io.File;
