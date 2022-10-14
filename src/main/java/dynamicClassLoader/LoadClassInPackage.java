@@ -90,7 +90,7 @@ public final class LoadClassInPackage {
 
         public String toClassName() {
             // Remove the '.class' file suffix.
-            return toPackageName().substring(0, file().getName().length() - 6);
+             return packageName().substring(0, packageName().length() - 6);
         }
     }
 }
