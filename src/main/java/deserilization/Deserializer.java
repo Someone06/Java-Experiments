@@ -45,11 +45,26 @@ public final class Deserializer {
         return (Class<DeserializeClass<?>>) (Class<?>) DeserializeClass.class;
     }
 
+    private static <T> T deserialize(final DeserializeClass<T> deserializer,
+            final Class<T> target, final String serialized) {
+        try {
+            return deserializer.deserialize(serialized);
+        } catch (final DeserializeClassException e) {
+            final var message = String.format(
+                    "Could not deserialize '%s' into object of class '%s'.",
+                    serialized, target
+                                             );
+            throw new DeserializeClassException(message, e);
+        }
+
+    }
+
     public <T> T deserialize(final Class<T> target, final String serialized) {
         requireNonNull(target);
         requireNonNull(serialized);
 
-        return getDeserializer(target).map(d -> d.deserialize(serialized))
+        return getDeserializer(target).map(
+                        d -> deserialize(d, target, serialized))
                 .orElseThrow(() -> new NoDeserializerForClassException(target));
     }
 
@@ -67,6 +82,27 @@ public final class Deserializer {
         Class<T> getDeserializedClass();
 
         T deserialize(final String serialized);
+    }
+
+    public static final class DeserializeClassException
+            extends RuntimeException {
+        public DeserializeClassException() {
+            super();
+        }
+
+        public DeserializeClassException(final String message) {
+            super(message);
+        }
+
+        public DeserializeClassException(final Throwable cause) {
+            super(cause);
+        }
+
+        public DeserializeClassException(final String message,
+                final Throwable cause) {
+            super(message, cause);
+        }
+
     }
 
     public static final class MultipleDeserializersForClassException
