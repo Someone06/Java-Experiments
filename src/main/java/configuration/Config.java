@@ -1,5 +1,7 @@
 package configuration;
 
+import java.util.Set;
+
 public interface Config {
     boolean containsKey(ConfigurationKey key);
 
@@ -8,6 +10,8 @@ public interface Config {
     Object getValue(ConfigurationKey key);
 
     Class<?> getClazz(ConfigurationKey key);
+
+    Set<ConfigurationKey> getKeys();
 
     @Override
     String toString();

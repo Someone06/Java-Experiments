@@ -1,8 +1,6 @@
 package configuration;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.NoSuchElementException;
+import java.util.*;
 
 import static java.util.Objects.requireNonNull;
 
@@ -69,6 +67,11 @@ public final class ConfigBase implements Config {
         } else {
             return record.clazz();
         }
+    }
+
+    @Override
+    public Set<ConfigurationKey> getKeys() {
+        return Collections.unmodifiableSet(configs.keySet());
     }
 
     @Override
