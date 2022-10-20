@@ -3,7 +3,10 @@ package configuration;
 
 import deserilization.Deserializer;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 
 import static java.util.Objects.requireNonNull;
@@ -11,17 +14,11 @@ import static java.util.Objects.requireNonNull;
 public final class ConfigFromStrings implements Config {
     private final Config baseConfig;
     private final Map<ConfigurationKey, ConfigBase.ClassAndValue<?>> configs;
-    private final Set<ConfigurationKey> keys;
 
     public ConfigFromStrings(final Config baseConfig,
             final Function<ConfigurationKey, Optional<String>> lookup) {
         this.baseConfig = requireNonNull(baseConfig);
         configs = init(baseConfig, requireNonNull(lookup));
-
-        final var keys = new HashSet<ConfigurationKey>();
-        keys.addAll(baseConfig.getKeys());
-        keys.addAll(configs.keySet());
-        this.keys = Collections.unmodifiableSet(keys);
     }
 
     private static Map<ConfigurationKey, ConfigBase.ClassAndValue<?>> init(
@@ -91,7 +88,7 @@ public final class ConfigFromStrings implements Config {
 
     @Override
     public Set<ConfigurationKey> getKeys() {
-        return keys;
+        return baseConfig.getKeys();
     }
 
     @Override
