@@ -86,12 +86,12 @@ public final class ConfigBase implements Config {
         }
     }
 
-    public static final class ConfigBaseBuilder {
+    public static final class ConfigBuilder {
         private Map<ConfigurationKey, ClassAndValue<?>> configs
                 = new HashMap<>();
         private boolean build = false;
 
-        public <T> ConfigBaseBuilder add(final ConfigurationKey key,
+        public <T> ConfigBuilder add(final ConfigurationKey key,
                 final Class<T> clazz, final T defaultValue) {
             if (build) {
                 throw new IllegalStateException(
@@ -109,7 +109,7 @@ public final class ConfigBase implements Config {
             }
         }
 
-        public ConfigBase build() {
+        public Config build() {
             if (!build) {
                 final var result = new ConfigBase(configs);
                 build = true;
