@@ -104,7 +104,7 @@ public final class ConfigBase implements Config {
             warnOnDropWithoutBuild = requireNonNull(warn);
         }
 
-        public ConfigBuilder create() {
+        public static ConfigBuilder create() {
             return new ConfigBuilder();
         }
 
