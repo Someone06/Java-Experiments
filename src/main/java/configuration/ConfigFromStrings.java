@@ -11,7 +11,7 @@ import java.util.function.Function;
 
 import static java.util.Objects.requireNonNull;
 
-public final class ConfigFromStrings implements Config {
+public class ConfigFromStrings implements Config {
     private final Config baseConfig;
     private final Map<ConfigurationKey, ConfigBase.ClassAndValue<?>> configs;
 
@@ -41,7 +41,7 @@ public final class ConfigFromStrings implements Config {
         return configs;
     }
 
-    public static <T> ConfigBase.ClassAndValue<T> deserialize(
+    private static <T> ConfigBase.ClassAndValue<T> deserialize(
             final Class<T> clazz, final String serialized,
             final Deserializer deserializer) {
         final var deserialized = deserializer.deserialize(clazz, serialized);
@@ -49,12 +49,12 @@ public final class ConfigFromStrings implements Config {
     }
 
     @Override
-    public boolean containsKey(final ConfigurationKey key) {
+    public final boolean containsKey(final ConfigurationKey key) {
         return configs.containsKey(key) || baseConfig.containsKey(key);
     }
 
     @Override
-    public <T> T getValue(ConfigurationKey key, Class<T> clazz) {
+    public final <T> T getValue(ConfigurationKey key, Class<T> clazz) {
         final var record = configs.get(key);
         if (record != null) {
             if (clazz.isAssignableFrom(record.clazz())) {
@@ -75,19 +75,19 @@ public final class ConfigFromStrings implements Config {
     }
 
     @Override
-    public Object getValue(ConfigurationKey key) {
+    public final Object getValue(ConfigurationKey key) {
         final var record = configs.get(key);
         return record != null ? record.value() : baseConfig.getValue(key);
     }
 
     @Override
-    public Class<?> getClazz(final ConfigurationKey key) {
+    public final Class<?> getClazz(final ConfigurationKey key) {
         final var record = configs.get(key);
         return record != null ? record.clazz() : baseConfig.getClazz(key);
     }
 
     @Override
-    public Set<ConfigurationKey> getKeys() {
+    public final Set<ConfigurationKey> getKeys() {
         return baseConfig.getKeys();
     }
 
