@@ -41,7 +41,7 @@ public final class ConfigurationKey {
         if (len < 2 || key.charAt(0) != '/' || key.charAt(len - 1) == '/') {
             return false;
         } else {
-            return IntStream.range(1, len).noneMatch(i -> {
+            return IntStream.range(1, len).allMatch(i -> {
                 final var c = key.charAt(i);
                 return isLowercaseOrDigit(c) || (c == '/'
                         && key.charAt(i - 1) != '/');
