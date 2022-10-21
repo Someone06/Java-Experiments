@@ -62,7 +62,6 @@ public final class PluginLoader<T> {
          * to a reference to an object of type T.
          */
         return new LoadClassInPackage().loadClasses(packageName)
-                .filter(Class::isLocalClass)
                 .filter(clazz -> !Modifier.isAbstract(clazz.getModifiers()))
                 .filter(pluginInterface::isAssignableFrom)
                 .map(PluginLoader::getZeroArgumentConstructor)
