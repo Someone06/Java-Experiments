@@ -1,6 +1,8 @@
 package configuration;
 
+import java.lang.ref.Cleaner;
 import java.util.*;
+import java.util.function.Consumer;
 
 import static java.util.Objects.requireNonNull;
 
@@ -87,45 +89,91 @@ public final class ConfigBase implements Config {
     }
 
     public static final class ConfigBuilder {
-        private Map<ConfigurationKey, ClassAndValue<?>> configs
-                = new HashMap<>();
-        private boolean build = false;
+
+        private static final Cleaner cleaner = Cleaner.create();
+
+        private static Consumer<Config> warnOnDropWithoutBuild = null;
+
+        private final State state = new State();
+
+        private ConfigBuilder() {
+            cleaner.register(this, state);
+        }
+
+        public static void warnOnDropWithoutBuild(final Consumer<Config> warn) {
+            warnOnDropWithoutBuild = requireNonNull(warn);
+        }
+
+        public ConfigBuilder create() {
+            return new ConfigBuilder();
+        }
 
         public <T> ConfigBuilder add(final ConfigurationKey key,
                 final Class<T> clazz, final T defaultValue) {
-            if (build) {
-                throw new IllegalStateException(
-                        "Cannot add a key after the config has been build.");
-            }
-
-            final var record = new ClassAndValue<>(clazz, defaultValue);
-            final var oldValue = configs.putIfAbsent(key, record);
-
-            if (oldValue == null) {
-                return this;
-            } else {
-                throw new IllegalStateException(
-                        "The key '%s' has already been added.".formatted(key));
-            }
+            state.add(key, clazz, defaultValue);
+            return this;
         }
 
         public Config build() {
-            if (!build) {
-                final var result = new ConfigBase(configs);
-                build = true;
-                configs = null;
-                return result;
-            } else {
-                throw new IllegalStateException(
-                        "Can only use .build() once on a ConfigBaseBuilder "
-                                + "object.");
-            }
+            return state.build();
         }
 
         @Override
         public String toString() {
-            return "ConfigBaseBuilder{configs=%s, build=%s}".formatted(
-                    configs, build);
+            return state.toString();
+        }
+
+        private static class State implements Runnable {
+
+            private Map<ConfigurationKey, ClassAndValue<?>> configs
+                    = new HashMap<>();
+
+            private boolean build = false;
+
+            public Config build() {
+                if (!build) {
+                    final var result = new ConfigBase(configs);
+                    build = true;
+                    configs = null;
+                    return result;
+                } else {
+                    throw new IllegalStateException(
+                            "Can only use .build() once on a ConfigBaseBuilder "
+                                    + "object.");
+                }
+            }
+
+            public <T> void add(final ConfigurationKey key,
+                    final Class<T> clazz, final T defaultValue) {
+                if (build) {
+                    throw new IllegalStateException(
+                            "Cannot add a key after the config has been build"
+                                    + ".");
+                }
+
+                final var record = new ClassAndValue<>(clazz, defaultValue);
+                final var oldValue = configs.putIfAbsent(key, record);
+
+                if (oldValue != null) {
+                    throw new IllegalStateException(
+                            "The key '%s' has already been added.".formatted(
+                                    key));
+                }
+            }
+
+            @Override
+            public void run() {
+                if (!build) {
+                    ConfigBuilder.warnOnDropWithoutBuild.accept(
+                            new ConfigBase(configs));
+                }
+            }
+
+            @Override
+            public String toString() {
+                return "ConfigBaseBuilder{configs=%s, build=%s}".formatted(
+                        configs, build);
+            }
         }
     }
 }
