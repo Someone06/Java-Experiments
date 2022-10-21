@@ -92,6 +92,21 @@ public class ConfigFromStrings implements Config {
     }
 
     @Override
+    public final boolean equals(final Object obj) {
+        return super.equals(obj);
+    }
+
+    @Override
+    public final int hashCode() {
+        return super.hashCode();
+    }
+
+    @Override
+    protected final Object clone() throws CloneNotSupportedException {
+        return super.clone();
+    }
+
+    @Override
     public String toString() {
         return "ConfigFromStrings{baseConfig=%s, configs=%s}".formatted(
                 baseConfig, configs);
