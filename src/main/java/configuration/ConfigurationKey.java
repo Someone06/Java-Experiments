@@ -1,12 +1,15 @@
 package configuration;
 
 import java.util.List;
-import java.util.stream.IntStream;
+import java.util.regex.Pattern;
 
 import static java.util.Objects.requireNonNull;
 
-public final class ConfigurationKey {
 
+public final class ConfigurationKey {
+    private final static Pattern piecePattern = Pattern.compile("[a-zA-Z0-9]+");
+    private final static Pattern keyPatter = Pattern.compile(
+            "(?:/[a-zA-Z0-9]+)+");
     private final String key;
 
     public ConfigurationKey(final List<String> pieces) {
@@ -36,36 +39,13 @@ public final class ConfigurationKey {
     }
 
     private static boolean isValidKey(final String key) {
-        final var len = key.length();
-
-        if (len < 2 || key.charAt(0) != '/' || key.charAt(len - 1) == '/') {
-            return false;
-        } else {
-            return IntStream.range(1, len).allMatch(i -> {
-                final var c = key.charAt(i);
-                return isLowercaseOrDigit(c) || (c == '/'
-                        && key.charAt(i - 1) != '/');
-            });
-        }
+        return keyPatter.matcher(key).matches();
     }
 
     private static boolean isValidKey(final List<String> list) {
         return !list.isEmpty() && list.stream()
-                .allMatch(ConfigurationKey::isValidPiece);
-    }
-
-    private static boolean isValidPiece(final String piece) {
-        return !piece.isEmpty() && piece.codePoints()
-                .allMatch(ConfigurationKey::isLowercaseOrDigit);
-
-    }
-
-    private static boolean isLowercaseOrDigit(final int codePoint) {
-        return Character.isLowerCase(codePoint) || Character.isDigit(codePoint);
-    }
-
-    private static boolean isLowercaseOrDigit(final char c) {
-        return Character.isLowerCase(c) || Character.isDigit(c);
+                .allMatch(piece -> piecePattern.matcher(requireNonNull(piece))
+                        .matches());
     }
 
     @Override
