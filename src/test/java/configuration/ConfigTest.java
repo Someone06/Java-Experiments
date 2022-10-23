@@ -1,5 +1,5 @@
-import configuration.ConfigFromProperties;
-import configuration.ConfigurationKey;
+package configuration;
+
 import org.junit.jupiter.api.Test;
 
 import java.io.FileInputStream;
