@@ -19,4 +19,8 @@ any bugs to me, so I can fix them).
   but can easily be extended to cover other kind of file formats. The framework also allows for configuration values to
   be of arbitrary type, not just strings.
 
+# License
+
+Licensed under the terms of the Apache 2.0 license. See [`LICENSE`](LICENSE) and [`NOTICE`](NOTICE).
+
 
