@@ -1,5 +1,6 @@
 package util;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -78,5 +79,45 @@ public final class ListUtil {
          * needed, so we do not do it here.
          */
         return Collections.unmodifiableList(Arrays.asList(result));
+    }
+
+    /**
+     * Removes the given element, if it is in the list, by first swapping the
+     * last element in the list with the given element, and then removing the
+     * given element. This avoid the need to shift all the elements past the
+     * removed element.
+     *
+     * @param list The list from which to remove the element.
+     * @param element The element which should be removed, if present.
+     * @return The index, at which the element was found if present, else -1.
+     * @param <T> The type of objects in the list.
+     */
+    public <T> int swapRemove(final ArrayList<T> list, final T element) {
+        final int index = list.indexOf(element);
+        if(index > 0) {
+            final int last = list.size() - 1;
+            Collections.swap(list, index, last);
+            list.remove(last);
+        }
+
+        return index;
+    }
+
+    /**
+     * Removed the element at the given index by first swapping the element
+     * at the given index with the last element in the list, and then
+     * removing the last element of the list. This avoids the need to shift
+     * all elements past the removed element.
+     *
+     * @param list The list from which to remove an element.
+     * @param index The index of the element to remove.
+     * @throws IndexOutOfBoundsException If the given index is out of bounds.
+     * @return The removed element.
+     * @param <T> The type of objects in the list.
+     */
+    public <T> T swapRemove(final ArrayList<T> list, final int index) {
+        final int last = list.size() - 1;
+        Collections.swap(list, index, last);
+        return list.remove(last);
     }
 }
